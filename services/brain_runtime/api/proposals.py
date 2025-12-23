@@ -153,8 +153,8 @@ async def approve_proposal(
         # Mark as approved
         await service.approve_proposal(proposal_id)
 
-        # Apply changes
-        proposal = await service.apply_proposal(proposal_id)
+        # Apply changes with git integration (auto-commit before/after)
+        proposal = await service.apply_proposal_with_git(proposal_id)
         await db.commit()
 
         return {

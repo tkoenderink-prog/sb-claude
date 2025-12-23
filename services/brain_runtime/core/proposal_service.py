@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.db_models import ProposalDB, ProposalFileDB, UserSettingsDB
 from core.config import get_settings
+from core.git_service import VaultGitService
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -234,6 +235,88 @@ class ProposalService:
             raise ApplyError(f"Failed to apply changes: {e}")
 
         return proposal
+
+    async def apply_proposal_with_git(
+        self,
+        proposal_id: str,
+        user_settings: Optional[dict] = None
+    ) -> ProposalDB:
+        """
+        Apply proposal with git commits before and after.
+
+        This is the recommended way to apply proposals as it creates safety checkpoints.
+        """
+        # Get user settings for git configuration
+        if user_settings is None:
+            stmt = select(UserSettingsDB).limit(1)
+            result = await self.db.execute(stmt)
+            settings_db = result.scalar_one_or_none()
+            user_settings = settings_db.git_settings if settings_db and settings_db.git_settings else {}
+
+        git_settings = user_settings if isinstance(user_settings, dict) else {}
+
+        # Check if auto-commit is enabled
+        auto_commit = git_settings.get('auto_commit_on_edit', True)
+        auto_push = git_settings.get('auto_push', False)
+
+        if not auto_commit:
+            # If auto-commit disabled, just apply normally
+            return await self.apply_proposal(proposal_id)
+
+        # Initialize git service
+        vault_path = str(get_vault_path())
+        git_service = VaultGitService(vault_path)
+
+        if not git_service.is_git_repo:
+            logger.info("Vault is not a git repository, applying without git commits")
+            return await self.apply_proposal(proposal_id)
+
+        # Get proposal for commit message
+        proposal = await self.get_proposal(proposal_id)
+        if not proposal:
+            raise ProposalError(f"Proposal not found: {proposal_id}")
+
+        # Get affected files for targeted commits
+        files = await self.get_proposal_files(proposal_id)
+        affected_files = [f.file_path for f in files]
+
+        try:
+            # Pre-edit commit (safety checkpoint)
+            pre_commit_msg = f"Pre-edit: {proposal.description}"
+            pre_commit_result = await git_service.commit_changes(
+                message=pre_commit_msg,
+                files=affected_files if affected_files else None
+            )
+            if pre_commit_result.get('success'):
+                logger.info(f"Pre-edit commit: {pre_commit_msg}")
+
+            # Apply the proposal
+            result = await self.apply_proposal(proposal_id)
+
+            # Post-edit commit
+            template = git_settings.get('commit_message_template', '[Second Brain] {action}')
+            post_commit_msg = template.replace('{action}', f"Applied: {proposal.description}")
+            post_commit_result = await git_service.commit_changes(
+                message=post_commit_msg,
+                files=affected_files if affected_files else None
+            )
+            if post_commit_result.get('success'):
+                logger.info(f"Post-edit commit: {post_commit_msg}")
+
+            # Auto-push if enabled
+            if auto_push:
+                sync_result = await git_service.sync()
+                if sync_result.get('success'):
+                    logger.info("Auto-pushed changes to remote")
+                else:
+                    logger.warning(f"Auto-push failed: {sync_result.get('error')}")
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Error in apply_proposal_with_git: {e}")
+            # Still try to apply the proposal even if git operations fail
+            return await self.apply_proposal(proposal_id)
 
     async def reject_proposal(self, proposal_id: str) -> ProposalDB:
         """Mark proposal as rejected."""
