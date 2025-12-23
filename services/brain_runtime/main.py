@@ -35,6 +35,8 @@ from api import (
     # Phase 10
     personas_router,
     councils_router,
+    # Vault Git Management
+    vault_git_router,
 )
 from api.sync import reset_stuck_syncs
 
@@ -121,6 +123,8 @@ app.include_router(vault_browse_router)
 # Phase 10 routers
 app.include_router(personas_router)
 app.include_router(councils_router)
+# Vault Git Management
+app.include_router(vault_git_router)
 
 
 @app.get("/")

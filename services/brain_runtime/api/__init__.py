@@ -22,6 +22,8 @@ from .context_files import vault_router as vault_browse_router
 # Phase 10 routers
 from .personas import router as personas_router
 from .councils import router as councils_router
+# Vault Git Management (Scenario 3 - Week 2, Day 7)
+from .vault_git import router as vault_git_router
 
 __all__ = [
     "health_router",
@@ -46,4 +48,6 @@ __all__ = [
     # Phase 10
     "personas_router",
     "councils_router",
+    # Vault Git Management
+    "vault_git_router",
 ]
