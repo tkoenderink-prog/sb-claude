@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://second-brain.local/schemas/chunk_v1.json",
+  "title": "ChunkV1",
+  "description": "A text chunk for RAG retrieval",
+  "type": "object",
+  "required": ["chunk_id", "text", "file_path", "start_line", "end_line", "token_count"],
+  "properties": {
+    "chunk_id": {
+      "type": "string",
+      "description": "Unique chunk identifier"
+    },
+    "text": {
+      "type": "string",
+      "description": "Chunk text content"
+    },
+    "file_path": {
+      "type": "string",
+      "description": "Source file path"
+    },
+    "heading_path": {
+      "type": "string",
+      "description": "Nested heading path (e.g., 'H1 > H2 > H3')"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Tags from frontmatter or inline"
+    },
+    "links": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Wikilinks found in chunk"
+    },
+    "start_line": {
+      "type": "integer",
+      "description": "Starting line number"
+    },
+    "end_line": {
+      "type": "integer",
+      "description": "Ending line number"
+    },
+    "token_count": {
+      "type": "integer",
+      "description": "Token count for this chunk"
+    }
+  }
+}

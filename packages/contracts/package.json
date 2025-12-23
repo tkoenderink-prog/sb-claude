@@ -1,0 +1,16 @@
+{
+  "name": "@second-brain/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./typescript/index.ts",
+  "types": "./typescript/index.ts",
+  "exports": {
+    ".": "./typescript/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}

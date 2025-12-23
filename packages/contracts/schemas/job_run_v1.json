@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://second-brain.local/schemas/job_run_v1.json",
+  "title": "JobRunV1",
+  "description": "A job execution record",
+  "type": "object",
+  "required": ["id", "type", "status", "command", "started_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique job identifier"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["processor", "index", "agent", "chat"],
+      "description": "Type of job"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["queued", "running", "succeeded", "failed", "cancelled"],
+      "description": "Current job status"
+    },
+    "command": {
+      "type": "string",
+      "description": "Command or processor name"
+    },
+    "args": {
+      "type": "object",
+      "description": "Optional arguments for the job"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the job started"
+    },
+    "ended_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "When the job ended"
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ArtifactRef"
+      },
+      "default": [],
+      "description": "List of produced artifacts"
+    },
+    "metrics": {
+      "type": "object",
+      "description": "Job metrics and statistics"
+    }
+  },
+  "definitions": {
+    "ArtifactRef": {
+      "type": "object",
+      "required": ["id", "name", "path"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "path": { "type": "string" },
+        "mime_type": { "type": "string" },
+        "size_bytes": { "type": "integer" }
+      }
+    }
+  }
+}

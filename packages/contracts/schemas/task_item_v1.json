@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://second-brain.local/schemas/task_item_v1.json",
+  "title": "TaskItemV1",
+  "description": "An Obsidian task item",
+  "type": "object",
+  "required": ["task_id", "file_path", "line_number", "text", "text_clean", "status"],
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "description": "Unique task identifier (hash of file_path + line)"
+    },
+    "file_path": {
+      "type": "string",
+      "description": "Path to file containing the task"
+    },
+    "line_number": {
+      "type": "integer",
+      "description": "Line number in file (1-indexed)"
+    },
+    "text": {
+      "type": "string",
+      "description": "Raw task text including markdown"
+    },
+    "text_clean": {
+      "type": "string",
+      "description": "Task text with metadata removed"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["todo", "done", "in_progress", "cancelled"],
+      "description": "Task completion status"
+    },
+    "due_date": {
+      "type": ["string", "null"],
+      "format": "date",
+      "description": "Due date (YYYY-MM-DD)"
+    },
+    "scheduled_date": {
+      "type": ["string", "null"],
+      "format": "date",
+      "description": "Scheduled date (YYYY-MM-DD)"
+    },
+    "priority": {
+      "type": ["string", "null"],
+      "enum": ["highest", "high", "medium", "low", "lowest", null],
+      "description": "Task priority"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Tags associated with the task"
+    },
+    "estimate_min": {
+      "type": ["integer", "null"],
+      "description": "Estimated time in minutes"
+    },
+    "actual_min": {
+      "type": ["integer", "null"],
+      "description": "Actual time spent in minutes"
+    },
+    "obsidian_uri": {
+      "type": "string",
+      "description": "Obsidian URI to open this task"
+    }
+  }
+}
