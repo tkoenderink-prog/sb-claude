@@ -1,11 +1,15 @@
 # Second Brain System - Development Guide
 
-**Project:** AI Second Brain System
-**Location:** `~/dev/second-brain-app` (LOCAL - NOT iCloud!)
-**Status:** Planning Phase - Scenario 3 MVP Implementation
-**Last Updated:** 2025-12-23
+**Project:** AI Second Brain System (sb-claude)
+**Location:** `/Users/tijlkoenderink/Library/Mobile Documents/iCloud~md~obsidian/Documents/web-sb-claude`
+**Vault:** `/Users/tijlkoenderink/Library/Mobile Documents/iCloud~md~obsidian/Documents/Obsidian-Private`
+**Status:** ⚡ **DEVELOPMENT CYCLE IN PROGRESS** - Production Readiness Phase
+**Last Updated:** 2026-01-02
 
 **📋 Key Documentation:**
+- **Development Cycle Plan:** `DEVELOPMENT-CYCLE-PLAN.md` - 7-phase roadmap to production (NEW!)
+- **Next Phase Roadmap:** `2do-next-phase.md` - Post-production features (NEW!)
+- **Setup Guide:** `SETUP.md` - Complete setup instructions (NEW!)
 - **System Definition:** `docs/SYSTEM_DEFINITION_v0.9.md` - Complete spec
 - **Comprehensive Review:** `docs/COMPREHENSIVE_REVIEW_2025-12-23.md` - Current state analysis
 - **Implementation Plan:** `docs/SCENARIO_3_IMPLEMENTATION_PLAN.md` - 4-week roadmap
@@ -93,11 +97,28 @@ curl http://localhost:8001/health  # Local
 
 ## Current Status
 
+**🎯 NEW: Development Cycle Initiated (2026-01-02)**
+
+We are now executing a comprehensive 7-phase development cycle to achieve production readiness:
+
+| Phase | Focus | Duration | Status |
+|-------|-------|----------|--------|
+| **Phase 1** | Code Review & Analysis | 3-4 days | 📋 Planned |
+| **Phase 2** | Local Mode Testing (3001/8001) | 2-3 days | 📋 Planned |
+| **Phase 3** | Docker Mode Testing (3000/8000) | 2-3 days | 📋 Planned |
+| **Phase 4** | Test Suite (70% coverage) | 5-7 days | 📋 Planned |
+| **Phase 5** | Cloudflare Tunnel (HTTPS) | 2-3 days | 📋 Planned |
+| **Phase 6** | Claude Agent SDK Integration | 5-7 days | 📋 Planned |
+| **Phase 7** | Documentation & Production | 3-4 days | 📋 Planned |
+
+**Feature Completion:**
+
 | Component | Status | Coverage | Notes |
 |-----------|--------|----------|-------|
 | **Phases 1-9A** | ✅ Complete | ~20% | Foundation, Chat, Proposals, Skills |
 | **Phase 10** | ⚠️ 90% | <5% | Personas/Councils - needs verification |
-| **Scenario 3** | 📋 Planned | Target: 70% | 4-week MVP plan ready |
+| **Environment Setup** | ✅ Complete | - | Both Docker & Local modes configured |
+| **Claude Agent SDK** | 📋 Ready | - | Auto-discovery capabilities identified |
 
 **Critical Gaps:**
 - Test coverage: <5% (target: 70%)
@@ -197,27 +218,35 @@ docker-compose.dev.yml    # Dev mode with volume mounts for hot reload
 
 ## Phase 10: Council & Persona System (90% Complete)
 
-**Concept:** Rotate coaching personalities with exclusive skills using tool-based architecture.
+**MAJOR DISCOVERY (Phase 0, 2026-01-02):**
+- **52 Personas** exist in `Obsidian-Private/.claude/agents/` (Claude Agent SDK format)
+- **34 Skills** exist in `Obsidian-Private/.claude/skills/` (including `call-council`)
+- System architecture supports this via SDK auto-discovery (Phase 6)
+
+**Concept:** Multi-persona consultations using existing persona library + call-council skill.
 
 **Status:**
 - ✅ Backend: query_persona_with_provider tool, subagent factory, API endpoints
-- ✅ Database: 5 personas seeded (Socratic, Contrarian, Pragmatist, Synthesizer, Coach)
-- ✅ Skills: 8 persona-specific + 3 council skills
-- ⚠️ Integration: Needs verification (chat wiring, frontend, session tracking)
+- ✅ Personas: **52 personas in vault** (adam-grant, cal-newport, bessel-van-der-kolk, etc.)
+- ✅ Skills: **34 custom skills in vault** (call-council for multi-persona orchestration)
+- ⚠️ Integration: Needs SDK auto-discovery setup (Phase 6)
+- ⚠️ Testing: Frontend/backend integration needs verification
 - ❌ Tests: 0% coverage
 
-**Personas:**
-| Name | Icon | Style |
-|------|------|-------|
-| Socratic | 🏛️ | Questions assumptions |
-| Contrarian | 😈 | Finds weaknesses |
-| Pragmatist | 🎯 | Drives to action |
-| Synthesizer | 🔮 | Finds connections |
-| Coach | 🌱 | Supportive growth |
+**Sample Personas (52 total):**
+- **Thought Leaders**: adam-grant, brene-brown, cal-newport
+- **Health**: andrew-huberman, bessel-van-der-kolk, gabor-mate
+- **Business**: alex-hormozi, dan-martell
+- **Spiritual**: buddha
+- **Utility**: calendar-assistant, document-classifier
+- ... (44 more)
 
-**Architecture:** Tool-based (LLM reads skills as instructions, not parsed data)
+**Architecture:**
+- Tool-based (LLM reads skills as instructions, not parsed data)
+- SDK auto-discovery for personas/skills (Phase 6)
+- call-council skill orchestrates multi-persona consultations
 
-Full details: `docs/SYSTEM_DEFINITION_v0.9.md` (Phase 10 section)
+**See**: `docs/PERSONA-SKILLS-INVENTORY.md` for complete list
 
 ---
 
@@ -400,6 +429,181 @@ PostgreSQL: `localhost:5432/second_brain`
 
 ---
 
+## 🤖 Claude Agent SDK Integration (Phase 6 - NEW!)
+
+### Built-in Automatic Discovery ✅
+
+The Claude Agent SDK has **native automatic skill discovery** - no manual scanning needed!
+
+**Configuration** (Python):
+```python
+from claude_agent_sdk import ClaudeAgentOptions
+
+options = ClaudeAgentOptions(
+    setting_sources=["user", "project"],  # Enable filesystem discovery
+    allowed_tools=["Skill"],              # Enable Skills tool
+    # Optional: specify project root (defaults to CWD)
+    project_path=os.getenv("OBSIDIAN_VAULT_PATH")  # Points to Obsidian-Private
+)
+```
+
+**What This Does:**
+- ✅ Automatically discovers SKILL.md files from `.claude/skills/`
+- ✅ Loads user skills: `~/.claude/skills/`
+- ✅ Loads project skills: `<vault>/.claude/skills/`
+- ✅ Project skills override user skills (same name)
+- ✅ Skills discovered at startup (no manual scanning!)
+
+### Current Vault Assets
+
+**Obsidian-Private** already contains SDK-compliant assets:
+```
+Obsidian-Private/.claude/
+├── skills/              # 35+ SKILL.md files (SDK-ready!)
+│   ├── vision-setting/
+│   ├── recovery-plan/
+│   ├── goal-hierarchy/
+│   └── [30+ more]
+├── agents/              # 50+ agent definitions
+│   ├── ray-dalio.md
+│   ├── cal-newport.md
+│   └── [48+ more]
+├── commands/            # 20+ command definitions
+│   ├── calendar.md
+│   ├── tasks.md
+│   └── [18+ more]
+└── settings.local.json  # Permission settings
+```
+
+### Integration Plan
+
+**Phase 6 Tasks:**
+1. Configure SDK with `setting_sources=["user", "project"]`
+2. Point `project_path` to Obsidian-Private
+3. Verify auto-discovery on startup (should find 35+ skills)
+4. Test skill matching and progressive loading
+5. Create API endpoints to list/query discovered skills
+6. Update frontend to show SDK-discovered skills
+
+**Benefits:**
+- Zero custom scanning code needed
+- Official SDK support and updates
+- Standard SKILL.md format
+- Automatic reload on file changes (if configured)
+
+**References:**
+- [Agent SDK Skills Docs](https://platform.claude.com/docs/en/agent-sdk/skills)
+- [Setting Sources Configuration](https://docs.claude.com/en/api/agent-sdk/overview)
+- [Skills Best Practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices)
+
+---
+
+## ☁️ Cloudflare Zero Trust Tunnel (Phase 5 - NEW!)
+
+### Secure Remote Access
+
+Production URLs (using **dare2b.nl** domain):
+- **Production Frontend:** https://brain.dare2b.nl
+- **Production API:** https://api.brain.dare2b.nl
+- **Dev Frontend:** https://brain-dev.dare2b.nl
+- **Dev API:** https://api-dev.dare2b.nl
+- **Health Dashboard:** https://health.brain.dare2b.nl
+
+### Setup Overview
+
+```bash
+# Install cloudflared
+brew install cloudflare/cloudflare/cloudflared
+
+# Authenticate
+cloudflared tunnel login
+
+# Create tunnel
+cloudflared tunnel create sb-claude-tunnel
+
+# Configure (~/.cloudflared/config.yml)
+tunnel: <TUNNEL-ID>
+credentials-file: ~/.cloudflared/<UUID>.json
+
+ingress:
+  - hostname: brain.dare2b.nl
+    service: http://localhost:3000
+  - hostname: api.brain.dare2b.nl
+    service: http://localhost:8000
+  - hostname: brain-dev.dare2b.nl
+    service: http://localhost:3001
+  - hostname: api-dev.dare2b.nl
+    service: http://localhost:8001
+  - service: http_status:404
+
+# Route DNS
+cloudflared tunnel route dns sb-claude-tunnel brain.dare2b.nl
+# (repeat for other hostnames)
+
+# Run as service
+sudo cloudflared service install
+sudo launchctl start com.cloudflare.cloudflared
+```
+
+### Authentication
+
+**Cloudflare Access** (SSO):
+- Identity providers: Google, GitHub, Email OTP
+- Access policy: Allow tijlkoenderink@example.com
+- Session duration: 24 hours
+- Audit logging enabled
+
+### Security Features
+
+- ✅ No exposed ports/IP addresses
+- ✅ Automatic HTTPS (TLS 1.3)
+- ✅ DDoS protection (Cloudflare network)
+- ✅ Bot mitigation
+- ✅ Rate limiting (10 req/min per user)
+- ✅ WAF (Web Application Firewall)
+- ✅ Global CDN
+
+### CORS Configuration
+
+```python
+# services/brain_runtime/main.py
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "https://brain.dare2b.nl",
+        "https://brain-dev.dare2b.nl",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+### Frontend Configuration
+
+```javascript
+// apps/web/src/config.ts
+export const API_URL =
+  process.env.NODE_ENV === 'production'
+    ? 'https://api.brain.dare2b.nl'
+    : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+```
+
+### Monitoring
+
+- **Cloudflare Analytics:** Traffic, bandwidth, response codes
+- **Tunnel Health:** `cloudflared tunnel info sb-claude-tunnel`
+- **Logs:** `tail -f /var/log/cloudflared.log`
+- **Alerts:** Email/Slack on tunnel disconnection, high error rates
+
+**References:**
+- [Cloudflare Tunnel Docs](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/)
+- [Zero Trust Access](https://developers.cloudflare.com/cloudflare-one/policies/access/)
+
+---
+
 ## Scenario 3 Roadmap (4 Weeks, 113 Hours)
 
 **Week 1: Critical Path (5 days)**
@@ -443,12 +647,13 @@ See `docs/SCENARIO_3_IMPLEMENTATION_PLAN.md` for day-by-day breakdown.
 | Pydantic import error | Use `uv run pytest` not bare `pytest` |
 | Tests can't collect | Ensure dev dependencies installed: `uv sync --extra dev` |
 | PostgreSQL fails | `pg_isready`, check DB is running |
-| iCloud slow/hangs | Project MUST be in `~/dev/`, NOT iCloud |
+| iCloud slow/hangs | ⚠️ Project IS in iCloud - May be slow. Force sync: `killall bird` |
 | Vault read-only (Docker) | Mount as read-write (no `:ro` suffix) |
-| Files owned by root (Docker) | Use USER_ID/GROUP_ID in .env |
+| Files owned by root (Docker) | Use USER_ID/GROUP_ID in .env (502/20) |
 | Port conflict | Local: 3001/8001, Docker: 3000/8000 |
 | Wrong backend in browser | Check NEXT_PUBLIC_API_URL matches your mode |
 | ChromaDB connection fails | Ensure port 8002 (not 8001) |
+| Skills not discovered | Verify `setting_sources=["user", "project"]` in SDK config |
 
 ---
 

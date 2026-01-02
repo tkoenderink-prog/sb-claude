@@ -53,10 +53,11 @@
 - [x] Infrastructure: PostgreSQL on :5432, ChromaDB on :8002
 
 **Core Concepts Understood:**
-- **Personas**: 5 personas (Socratic, Contrarian, Pragmatist, Synthesizer, Coach) in Phase 10
+- **Personas**: **52 personas** in Obsidian-Private/.claude/agents/ (bessel-van-der-kolk, adam-grant, cal-newport, etc.)
+- **Skills**: **34 custom skills** in Obsidian-Private/.claude/skills/ (including call-council for multi-persona consultations)
 - **Proposals**: File modification approval workflow
-- **Skills**: Progressive disclosure (23+ tools + custom skills)
-- **Council**: Multi-persona consultations using tool-based architecture
+- **Tools**: 23+ backend tools (calendar, tasks, vault, skills, proposals)
+- **Council**: Multi-persona consultations using tool-based architecture + call-council skill
 - **Vault**: Obsidian-Private integration for knowledge base
 
 ---
