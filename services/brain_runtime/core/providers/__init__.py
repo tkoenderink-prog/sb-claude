@@ -5,7 +5,7 @@ with support for streaming, tool calling, and consistent event formats.
 """
 
 import logging
-from typing import Dict, List
+from typing import Any, Dict, List
 from enum import Enum
 
 from .base import BaseProvider, ProviderModel, ModelCapability
@@ -56,7 +56,7 @@ def get_provider(provider_type: str, api_key: str) -> BaseProvider:
     return provider_class(api_key=api_key)
 
 
-def list_providers() -> List[Dict[str, any]]:
+def list_providers() -> List[Dict[str, Any]]:
     """List all available providers with their capabilities.
 
     Returns:
@@ -73,7 +73,7 @@ def list_providers() -> List[Dict[str, any]]:
     return providers
 
 
-def get_provider_models(provider_type: str) -> List[Dict[str, any]]:
+def get_provider_models(provider_type: str) -> List[Dict[str, Any]]:
     """Get available models for a provider without initializing it.
 
     Args:
