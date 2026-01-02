@@ -1,9 +1,17 @@
 """Multi-LLM client configuration for council providers."""
 
 import os
+from typing import TypedDict
+
+
+class ProviderConfig(TypedDict):
+    """Configuration for a single LLM provider."""
+    models: dict[str, str]
+    env_key: str
+
 
 # Provider configurations
-PROVIDER_CONFIGS = {
+PROVIDER_CONFIGS: dict[str, ProviderConfig] = {
     "anthropic": {
         "models": {
             "haiku": "claude-haiku-4-5-20251001",

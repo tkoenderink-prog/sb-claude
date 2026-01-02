@@ -6,7 +6,6 @@ Provides git operations for Obsidian vault with auto-commit support.
 import logging
 from pathlib import Path
 from typing import Optional
-from datetime import datetime
 from pydantic import BaseModel
 
 try:

@@ -174,7 +174,7 @@ def _get_processor(
 ):
     """Get processor instance by name."""
     settings = get_settings()
-    cache_dir = app_root / "data" / "cache" / "calendar"
+    cache_dir = data_root / "cache" / "calendar"
     cache_dir.mkdir(parents=True, exist_ok=True)
 
     if name == "calendar":
@@ -202,7 +202,7 @@ def _get_processor(
 
     if name == "rag":
         vault_path = Path(settings.get_vault_path())
-        data_path = app_root / "data"
+        data_path = data_root
         recreate = args.get("recreate", False) if args else False
         return RAGProcessor(
             exports_path=exports_path,
