@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { API_BASE } from '@/lib/api'
 
 interface GitSettings {
   auto_commit_on_edit: boolean
@@ -22,7 +23,7 @@ export function GitSettingsPanel() {
     setSaveStatus('idle')
     
     try {
-      const res = await fetch('http://localhost:8000/settings', {
+      const res = await fetch(`${API_BASE}/settings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ git_settings: settings }),

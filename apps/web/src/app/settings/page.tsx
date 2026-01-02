@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { API_BASE } from '@/lib/api'
 import {
   ArrowLeftIcon,
   CheckIcon,
@@ -137,9 +138,9 @@ export default function SettingsPage() {
     async function loadData() {
       try {
         const [settingsRes, keysRes, syncRes] = await Promise.all([
-          fetch('http://localhost:8000/settings'),
-          fetch('http://localhost:8000/settings/api-keys'),
-          fetch('http://localhost:8000/sync/status'),
+          fetch('${API_BASE}/settings'),
+          fetch('${API_BASE}/settings/api-keys'),
+          fetch('${API_BASE}/sync/status'),
         ])
 
         if (settingsRes.ok) {
@@ -171,7 +172,7 @@ export default function SettingsPage() {
   const updateSetting = useCallback(async (key: string, value: any) => {
     setIsSaving(true)
     try {
-      const response = await fetch('http://localhost:8000/settings', {
+      const response = await fetch('${API_BASE}/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [key]: value }),
@@ -195,13 +196,13 @@ export default function SettingsPage() {
   const updateApiKey = useCallback(
     async (provider: string) => {
       try {
-        const response = await fetch(`http://localhost:8000/settings/api-keys/${provider}`, {
+        const response = await fetch(`${API_BASE}/settings/api-keys/${provider}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ key: newKeyValue }),
         })
         if (response.ok) {
-          const keysRes = await fetch('http://localhost:8000/settings/api-keys')
+          const keysRes = await fetch('${API_BASE}/settings/api-keys')
           if (keysRes.ok) {
             const data = await keysRes.json()
             setApiKeys(data.keys || [])
@@ -218,11 +219,11 @@ export default function SettingsPage() {
 
   const testApiKey = useCallback(async (provider: string) => {
     try {
-      const response = await fetch(`http://localhost:8000/settings/api-keys/${provider}/test`, {
+      const response = await fetch(`${API_BASE}/settings/api-keys/${provider}/test`, {
         method: 'POST',
       })
       if (response.ok) {
-        const keysRes = await fetch('http://localhost:8000/settings/api-keys')
+        const keysRes = await fetch('${API_BASE}/settings/api-keys')
         if (keysRes.ok) {
           const data = await keysRes.json()
           setApiKeys(data.keys || [])
@@ -235,10 +236,10 @@ export default function SettingsPage() {
 
   const triggerSync = useCallback(async (syncType: string) => {
     try {
-      await fetch(`http://localhost:8000/sync/trigger/${syncType}`, {
+      await fetch(`${API_BASE}/sync/trigger/${syncType}`, {
         method: 'POST',
       })
-      const syncRes = await fetch('http://localhost:8000/sync/status')
+      const syncRes = await fetch('${API_BASE}/sync/status')
       if (syncRes.ok) {
         const data = await syncRes.json()
         setSyncStatuses(data.statuses || [])

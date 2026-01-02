@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { API_BASE } from '@/lib/api'
 
 interface GitCommit {
   message: string
@@ -26,7 +27,7 @@ export function VaultGitCard() {
   const { data: gitStatus, isLoading } = useQuery<GitStatus>({
     queryKey: ['vault-git-status'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:8000/vault/git/status')
+      const res = await fetch(`${API_BASE}/vault/git/status`)
       if (!res.ok) throw new Error('Failed to fetch git status')
       return res.json()
     },
@@ -35,7 +36,7 @@ export function VaultGitCard() {
 
   const syncMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('http://localhost:8000/vault/git/sync', {
+      const res = await fetch(`${API_BASE}/vault/git/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       })

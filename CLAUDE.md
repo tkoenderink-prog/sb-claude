@@ -13,12 +13,63 @@
 
 ---
 
+## Development Modes
+
+Two development modes available - use different ports to tell them apart:
+
+| Service | Docker Mode | Local Mode |
+|---------|-------------|------------|
+| Frontend | **3000** | **3001** |
+| Backend | **8000** | **8001** |
+| PostgreSQL | 5432 (shared) | 5432 (shared) |
+| ChromaDB | 8002 (shared) | 8002 (shared) |
+
+### Quick Start
+
+```bash
+# OPTION 1: Local Development (fastest iteration)
+./scripts/dev-local.sh
+# Frontend: http://localhost:3001
+# Backend:  http://localhost:8001
+
+# OPTION 2: Docker Development (production-like)
+./scripts/dev-docker.sh
+# Frontend: http://localhost:3000
+# Backend:  http://localhost:8000
+
+# Infrastructure only (PostgreSQL + ChromaDB)
+./scripts/infra.sh
+
+# Stop everything
+./scripts/infra-stop.sh
+```
+
+### When to Use Each Mode
+
+**Local Mode (`./scripts/dev-local.sh`)** - Daily development
+- ✅ Fastest hot reload (native filesystem)
+- ✅ Easy debugging with IDE
+- ✅ No container rebuild needed
+- ⚠️ Requires local Python 3.11 + Node 20
+
+**Docker Mode (`./scripts/dev-docker.sh`)** - Testing/verification
+- ✅ Identical to production
+- ✅ No local dependencies needed
+- ✅ Test Docker-specific behavior
+- ⚠️ Slower hot reload on macOS
+
+### Health Dashboard
+
+Visit `/health` to see environment info:
+- Environment badge shows 🐳 Docker or 💻 Local
+- Environment card shows ports, mode, ChromaDB connection
+- Both modes can run simultaneously on different ports!
+
+---
+
 ## Quick Reference
 
 ```bash
-# Start dev servers
-./scripts/dev.sh
-
 # Tests (ALWAYS use uv run for Python)
 cd services/brain_runtime && uv run pytest
 cd apps/web && pnpm test
@@ -28,7 +79,8 @@ cd services/brain_runtime && uv run ruff check .
 cd apps/web && pnpm lint
 
 # Health check
-curl http://localhost:8000/health
+curl http://localhost:8000/health  # Docker
+curl http://localhost:8001/health  # Local
 ```
 
 **Critical Python Rules:**
@@ -103,41 +155,43 @@ See `docs/SCENARIO_3_UPDATES_GIT_DOCKER.md` for complete implementation details.
 
 ---
 
-## Docker Deployment (Week 3)
+## Docker Architecture
 
-**Critical Fix Applied:** Vault must be mounted **read-write** (not read-only) for proposals to work.
+### Compose Files
 
-```yaml
-# docker-compose.yml
-volumes:
-  - "${OBSIDIAN_VAULT_PATH}:/vault"  # ✅ Read-write (proposals need this!)
-  - backend_data:/app/data
+```
+docker-compose.yml        # Full production deployment
+docker-compose.infra.yml  # Infrastructure only (postgres, chromadb)
+docker-compose.dev.yml    # Dev mode with volume mounts for hot reload
 ```
 
-**File Permissions Fix:**
-```dockerfile
-# Dockerfile - runs as non-root user matching host UID
-ARG USER_ID=1000
-ARG GROUP_ID=1000
-RUN groupadd -g ${GROUP_ID} app && useradd -u ${USER_ID} -g app app
-USER app
-```
+### Port Allocation
 
-**Services:**
-- Frontend (Next.js) - Port 3000
-- Backend (FastAPI) - Port 8000
-- PostgreSQL 16 - Port 5432 (internal)
-- ChromaDB - Port 8001 (internal)
+| Service | Port | Notes |
+|---------|------|-------|
+| Frontend (Docker) | 3000 | Production-like |
+| Frontend (Local) | 3001 | Hot reload |
+| Backend (Docker) | 8000 | Production-like |
+| Backend (Local) | 8001 | Hot reload |
+| PostgreSQL | 5432 | Shared infrastructure |
+| ChromaDB | 8002 | Shared infrastructure |
 
-**Commands:**
+### Scripts
+
 ```bash
-./scripts/docker-build.sh    # Build images
-./scripts/docker-start.sh    # Start all services
-./scripts/docker-logs.sh     # View logs
-./scripts/docker-stop.sh     # Stop services
+./scripts/infra.sh           # Start PostgreSQL + ChromaDB
+./scripts/infra-stop.sh      # Stop all Docker services
+./scripts/dev-local.sh       # Local dev (infra in Docker, app local)
+./scripts/dev-docker.sh      # Docker dev (all in Docker with volumes)
+./scripts/dev-docker-stop.sh # Stop Docker dev containers
 ```
 
-See `docs/SCENARIO_3_IMPLEMENTATION_PLAN.md` (Day 15) for complete Docker setup.
+### Critical Notes
+
+- Vault mounted **read-write** (proposals need write access)
+- USER_ID/GROUP_ID match host user (fixes permissions)
+- ChromaDB on port 8002 (avoids conflict with local backend on 8001)
+- Frontend uses `NEXT_PUBLIC_API_URL` env var for backend URL
 
 ---
 
@@ -390,8 +444,11 @@ See `docs/SCENARIO_3_IMPLEMENTATION_PLAN.md` for day-by-day breakdown.
 | Tests can't collect | Ensure dev dependencies installed: `uv sync --extra dev` |
 | PostgreSQL fails | `pg_isready`, check DB is running |
 | iCloud slow/hangs | Project MUST be in `~/dev/`, NOT iCloud |
-| Vault read-only (Docker) | Fixed in plan - mount as read-write |
-| Files owned by root (Docker) | Fixed in plan - use USER_ID/GROUP_ID |
+| Vault read-only (Docker) | Mount as read-write (no `:ro` suffix) |
+| Files owned by root (Docker) | Use USER_ID/GROUP_ID in .env |
+| Port conflict | Local: 3001/8001, Docker: 3000/8000 |
+| Wrong backend in browser | Check NEXT_PUBLIC_API_URL matches your mode |
+| ChromaDB connection fails | Ensure port 8002 (not 8001) |
 
 ---
 

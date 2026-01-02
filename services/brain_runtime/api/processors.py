@@ -24,9 +24,16 @@ router = APIRouter(prefix="/processors", tags=["processors"])
 
 # Initialize lock manager
 settings = get_settings()
-app_root = Path(__file__).parent.parent.parent.parent
-locks_path = app_root / "data" / "locks"
-exports_path = app_root / "exports"
+
+# Determine data path: use DATA_PATH env var if set (Docker), otherwise fallback to local dev path
+if settings.data_path:
+    data_root = Path(settings.data_path)
+else:
+    # Local dev: go up from services/brain_runtime/api to project root
+    data_root = Path(__file__).parent.parent.parent.parent / "data"
+
+locks_path = data_root / "locks"
+exports_path = data_root / "exports"
 
 lock_manager = LockManager(locks_path)
 
@@ -185,7 +192,7 @@ def _get_processor(
         )
 
     if name == "tasks":
-        vault_path = Path(settings.obsidian_location) / "Obsidian-Private"
+        vault_path = Path(settings.get_vault_path())
         return TaskProcessor(
             exports_path=exports_path,
             vault_path=vault_path,
@@ -194,7 +201,7 @@ def _get_processor(
         )
 
     if name == "rag":
-        vault_path = Path(settings.obsidian_location) / "Obsidian-Private"
+        vault_path = Path(settings.get_vault_path())
         data_path = app_root / "data"
         recreate = args.get("recreate", False) if args else False
         return RAGProcessor(

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getHealth, getCalendarStatus, getTasksStatus, getSkillsStats } from '@/lib/api'
+import { getHealth, getCalendarStatus, getTasksStatus, getSkillsStats, API_BASE } from '@/lib/api'
 import { useClientDateTime, useClientDate } from '@/hooks/useClientDate'
 import type { HealthResponse, CalendarStatus, TasksStatus, SkillsStats } from '@/lib/api'
 
@@ -62,7 +62,7 @@ function StatusPanel({ onClose }: { onClose: () => void }) {
             ) : health.isError ? (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-red-700 font-medium">Backend Offline</p>
-                <p className="text-red-600 text-sm">Cannot connect to http://localhost:8000</p>
+                <p className="text-red-600 text-sm">Cannot connect to {API_BASE}</p>
               </div>
             ) : (
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">

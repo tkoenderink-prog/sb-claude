@@ -99,7 +99,8 @@ export function useChat() {
       timestamp: new Date().toISOString(),
     }
 
-    // Track current messages in closure
+    // Get current messages synchronously using a ref pattern
+    // This avoids React 18 batching issues with setState
     let currentMessages: ChatMessage[] = []
 
     // Add user message to UI immediately and capture current state
@@ -107,6 +108,11 @@ export function useChat() {
       currentMessages = [...prev, newUserMessage]
       return currentMessages
     })
+
+    // Ensure we have the new message even if setState batching delays
+    if (currentMessages.length === 0) {
+      currentMessages = [newUserMessage]
+    }
 
     // Build request with full history including new message
     const fullRequest: ChatRequest = {

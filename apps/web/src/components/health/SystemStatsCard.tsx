@@ -1,6 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { API_BASE } from '@/lib/api'
 
 interface SystemStats {
   sessions_24h: number
@@ -13,7 +14,7 @@ export function SystemStatsCard() {
   const { data: stats, isLoading } = useQuery<SystemStats>({
     queryKey: ['system-stats'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:8000/health')
+      const res = await fetch(`${API_BASE}/health`)
       if (!res.ok) throw new Error('Failed to fetch stats')
       const health = await res.json()
       return {

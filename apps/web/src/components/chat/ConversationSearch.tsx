@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { API_BASE } from '@/lib/api'
 
 interface SearchResult {
   session_id: string
@@ -42,7 +43,7 @@ export function ConversationSearch({ onSelectSession, onSearchModeChange }: Conv
 
       try {
         const response = await fetch(
-          `http://localhost:8000/search/conversations?query=${encodeURIComponent(query)}&limit=20`
+          `${API_BASE}/search/conversations?query=${encodeURIComponent(query)}&limit=20`
         )
         if (!response.ok) {
           throw new Error('Search failed')

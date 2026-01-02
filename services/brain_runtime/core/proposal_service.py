@@ -46,9 +46,10 @@ class BackupError(ProposalError):
 
 def get_vault_path() -> Path:
     """Get the vault root path."""
-    if not settings.obsidian_location:
-        raise ProposalError("Obsidian location not configured")
-    return Path(settings.obsidian_location) / "Obsidian-Private"
+    vault_path = settings.get_vault_path()
+    if not vault_path:
+        raise ProposalError("Obsidian vault path not configured")
+    return Path(vault_path)
 
 
 def validate_vault_path(file_path: str) -> Path:
@@ -280,31 +281,47 @@ class ProposalService:
         files = await self.get_proposal_files(proposal_id)
         affected_files = [f.file_path for f in files]
 
+        # Pre-edit commit: only commit files that already exist
+        vault_path = Path(vault_path)
+        existing_files = [
+            f for f in affected_files
+            if (vault_path / f).exists()
+        ]
+
         try:
-            # Pre-edit commit (safety checkpoint)
-            pre_commit_msg = f"Pre-edit: {proposal.description}"
-            pre_commit_result = await git_service.commit_changes(
-                message=pre_commit_msg,
-                files=affected_files if affected_files else None
-            )
-            if pre_commit_result.get('success'):
-                logger.info(f"Pre-edit commit: {pre_commit_msg}")
+            # Pre-edit commit (safety checkpoint) - only for existing files
+            if existing_files:
+                pre_commit_msg = f"Pre-edit: {proposal.description}"
+                pre_commit_result = await git_service.commit_changes(
+                    message=pre_commit_msg,
+                    files=existing_files
+                )
+                if not pre_commit_result.get('success'):
+                    logger.warning(f"Pre-edit commit failed: {pre_commit_result.get('error')}")
+                    # Continue anyway - pre-edit is optional safety feature
+                else:
+                    logger.info(f"Pre-edit commit: {pre_commit_msg}")
 
             # Apply the proposal
             result = await self.apply_proposal(proposal_id)
 
-            # Post-edit commit
+            # Post-edit commit - commit all affected files (now they all exist)
             template = git_settings.get('commit_message_template', '[Second Brain] {action}')
             post_commit_msg = template.replace('{action}', f"Applied: {proposal.description}")
             post_commit_result = await git_service.commit_changes(
                 message=post_commit_msg,
                 files=affected_files if affected_files else None
             )
-            if post_commit_result.get('success'):
+
+            if not post_commit_result.get('success'):
+                logger.error(f"Post-edit commit failed: {post_commit_result.get('error')}")
+                # This is more serious - we've changed files but can't commit
+                # However, files are still safely modified, just not committed
+            else:
                 logger.info(f"Post-edit commit: {post_commit_msg}")
 
-            # Auto-push if enabled
-            if auto_push:
+            # Auto-push if enabled (only if post-commit succeeded)
+            if auto_push and post_commit_result.get('success'):
                 sync_result = await git_service.sync()
                 if sync_result.get('success'):
                     logger.info("Auto-pushed changes to remote")
@@ -315,8 +332,7 @@ class ProposalService:
 
         except Exception as e:
             logger.error(f"Error in apply_proposal_with_git: {e}")
-            # Still try to apply the proposal even if git operations fail
-            return await self.apply_proposal(proposal_id)
+            raise ProposalError(f"Failed to apply proposal with git: {str(e)}")
 
     async def reject_proposal(self, proposal_id: str) -> ProposalDB:
         """Mark proposal as rejected."""

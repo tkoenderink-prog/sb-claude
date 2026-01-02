@@ -1,6 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { API_BASE } from '@/lib/api'
 
 interface ChatSession {
   id: string
@@ -13,7 +14,7 @@ export function RecentActivityCard() {
   const { data: sessions, isLoading } = useQuery<ChatSession[]>({
     queryKey: ['recent-sessions'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:8000/sessions?limit=5')
+      const res = await fetch(`${API_BASE}/sessions?limit=5`)
       if (!res.ok) throw new Error('Failed to fetch sessions')
       return res.json()
     },

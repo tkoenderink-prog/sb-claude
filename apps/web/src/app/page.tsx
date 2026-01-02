@@ -44,9 +44,12 @@ export default function ChatPage() {
 
   const handleSessionCreated = useCallback((sessionId: string) => {
     setCurrentSessionId(sessionId)
-    localStorage.setItem('chat_session_id', sessionId)
-    // Invalidate sessions query to refresh the sidebar
-    queryClient.invalidateQueries({ queryKey: ['sessions'] })
+    // Note: localStorage is already updated by useChat hook when session is created
+    // Defer sidebar refresh to avoid race condition during session creation
+    // This prevents the flicker and wrongly reopening previous sessions
+    setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: ['sessions'] })
+    }, 1500)
   }, [queryClient])
 
   return (

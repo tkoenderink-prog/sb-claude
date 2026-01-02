@@ -1,0 +1,30 @@
+# Development Dockerfile with hot reload support
+FROM node:20-alpine
+
+# Install pnpm
+RUN npm install -g pnpm
+
+WORKDIR /monorepo
+
+# Copy workspace configuration
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+
+# Copy apps/web package files
+COPY apps/web/package.json ./apps/web/
+
+# Install all dependencies (workspace-aware)
+RUN pnpm install --frozen-lockfile --filter=web...
+
+WORKDIR /monorepo/apps/web
+
+# Copy app source
+COPY apps/web ./
+
+ENV NODE_ENV=development
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+EXPOSE 3000
+
+# Development command with hot reload
+CMD ["pnpm", "dev"]

@@ -34,6 +34,18 @@ export function ChatContainer({ sessionId: propSessionId, onSessionCreated }: Ch
   const [councilMemberIds, setCouncilMemberIds] = useState<string[]>([])
   const messageInputRef = useRef<MessageInputHandle>(null)
 
+  // Helper function to reset ALL component state (not just hook state)
+  const resetComponentState = () => {
+    setMode('tools')
+    setProvider('anthropic')
+    setModel('claude-sonnet-4-5-20250929')
+    setCurrentDraft('')
+    setSelectedDbMode(null)
+    setPendingContextFiles([])
+    setLeadPersonaId(null)
+    setCouncilMemberIds([])
+  }
+
   // Fetch database modes
   const { data: dbModes } = useModes()
 
@@ -78,7 +90,8 @@ export function ChatContainer({ sessionId: propSessionId, onSessionCreated }: Ch
   useEffect(() => {
     // If propSessionId changed to null (New Chat clicked)
     if (propSessionId === null && prevPropSessionIdRef.current !== null) {
-      clearSession()
+      clearSession()  // Clear hook state (messages, sessionId, etc.)
+      resetComponentState()  // Clear component state (mode, persona, etc.)
       setTimeout(() => messageInputRef.current?.focus(), 0)
     }
     prevPropSessionIdRef.current = propSessionId
@@ -141,11 +154,19 @@ export function ChatContainer({ sessionId: propSessionId, onSessionCreated }: Ch
   }
 
   const handlePersonaChatStart = (config: ChatConfig) => {
+    // Clear everything first
+    clearSession()  // Clear hook state (messages, sessionId, etc.)
+    resetComponentState()  // Reset to defaults
+
+    // Then apply persona configuration
     setLeadPersonaId(config.leadPersonaId)
     setCouncilMemberIds(config.councilMemberIds)
     if (config.modelOverride) {
       setModel(config.modelOverride)
     }
+
+    // Focus input so user can start typing
+    setTimeout(() => messageInputRef.current?.focus(), 0)
   }
 
   const handleSendMessage = (message: string) => {

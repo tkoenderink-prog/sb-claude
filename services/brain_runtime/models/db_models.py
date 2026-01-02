@@ -1,7 +1,7 @@
 """SQLAlchemy ORM models for database tables."""
 
 from sqlalchemy import Column, String, DateTime, JSON, Boolean, Integer, Text, Date
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.sql import func
 from core.database import Base
 import uuid
@@ -194,7 +194,7 @@ class ChatSessionDB(Base):
     mode_id = Column(UUID(as_uuid=True), nullable=True)  # Phase 9: Mode reference
     # Phase 10: Persona and council support
     lead_persona_id = Column(UUID(as_uuid=True), nullable=True)  # Orchestrator persona
-    council_member_ids = Column(JSON, default=list)  # Available council members
+    council_member_ids = Column(ARRAY(Text), default=list)  # Available council members
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
@@ -512,7 +512,7 @@ class SyncStatusDB(Base):
     files_processed = Column(Integer, default=0)
     chunks_created = Column(Integer, default=0)
     error_message = Column(Text, nullable=True)
-    sync_metadata = Column(JSON, default=dict)  # 'metadata' is reserved in SQLAlchemy
+    sync_metadata = Column("metadata", JSON, default=dict)  # 'metadata' is reserved in SQLAlchemy
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )

@@ -199,7 +199,7 @@ async def run_rag_sync():
             settings = get_settings()
             app_root = Path(__file__).parent.parent.parent.parent
             exports_path = app_root / "exports"
-            vault_path = Path(settings.obsidian_location) / "Obsidian-Private"
+            vault_path = Path(settings.get_vault_path())
             data_path = app_root / "data"
 
             logger.info(f"RAG sync: vault={vault_path}")
@@ -330,7 +330,7 @@ async def run_tasks_sync():
             settings = get_settings()
             app_root = Path(__file__).parent.parent.parent.parent
             exports_path = app_root / "exports"
-            vault_path = Path(settings.obsidian_location) / "Obsidian-Private"
+            vault_path = Path(settings.get_vault_path())
 
             logger.info(f"Tasks sync: vault={vault_path}")
 

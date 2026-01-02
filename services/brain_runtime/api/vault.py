@@ -224,7 +224,7 @@ async def _text_search(
     query: str, top_k: int, path_contains: Optional[str]
 ) -> list[SearchResult]:
     """Perform text search using ripgrep."""
-    vault_path = Path(settings.obsidian_location) / "Obsidian-Private"
+    vault_path = Path(settings.get_vault_path())
 
     if not vault_path.exists():
         return []
@@ -323,7 +323,7 @@ async def read_file(path: str):
 
     Can be called directly from tools or via the HTTP endpoint.
     """
-    vault_path = Path(settings.obsidian_location) / "Obsidian-Private"
+    vault_path = Path(settings.get_vault_path())
     file_path = vault_path / path
 
     # Security: ensure path is within vault
@@ -360,7 +360,7 @@ async def list_directory(path: str = ""):
 
     Can be called directly from tools or via the HTTP endpoint.
     """
-    vault_path = Path(settings.obsidian_location) / "Obsidian-Private"
+    vault_path = Path(settings.get_vault_path())
     dir_path = vault_path / path if path else vault_path
 
     # Security: ensure path is within vault

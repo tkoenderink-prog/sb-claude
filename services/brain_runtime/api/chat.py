@@ -74,7 +74,13 @@ Current Session ID: {session_id}
 - **text_search(query, limit)**: Find exact text matches
 - **hybrid_search(query, limit)**: Combines semantic + text search (best for general queries)
 - **read_vault_file(path)**: Read full content of a specific file
-- **list_vault_directory(path)**: List files in a vault folder
+- **list_vault_directory(path)**: List files in a vault folder. Use empty string "" to list root.
+
+IMPORTANT for Vault Navigation:
+- The vault has a NESTED folder structure. Don't assume paths exist.
+- ALWAYS start with list_vault_directory("") to discover top-level folders.
+- Then navigate into subfolders (e.g., "01-Private/06-JOURNAL" not "06-JOURNAL").
+- Search tools (hybrid_search, text_search) return full paths - use those directly.
 
 ## Skills Tools
 - **list_skills(source, category)**: List all available thinking frameworks and skills. Filter by source (user, vault, database) or category.
@@ -257,6 +263,21 @@ async def chat_event_generator(
         for msg in request.messages:
             provider_messages.append({"role": msg.role, "content": msg.content})
 
+        # Ensure we have at least one non-system message
+        non_system_messages = [m for m in provider_messages if m.get("role") != "system"]
+        if not non_system_messages:
+            error_msg = "At least one user message is required"
+            logger.error(f"Chat error: {error_msg}. Request messages: {request.messages}")
+            error_event = ChatEvent(
+                type="error",
+                data={"error": error_msg},
+                timestamp=datetime.now(timezone.utc),
+            )
+            yield f"event: error\ndata: {error_event.model_dump_json()}\n\n"
+            return
+
+        logger.info(f"Chat request with {len(non_system_messages)} user/assistant messages")
+
         # Get tools if mode is 'tools' or 'agent'
         tools = None
         tool_executor = None
@@ -268,8 +289,8 @@ async def chat_event_generator(
         # Send initial status
         yield f"event: status\ndata: {json.dumps({'status': 'started', 'session_id': session_id})}\n\n"
 
-        # Tool execution loop - max 5 turns to prevent infinite loops
-        max_turns = 5
+        # Tool execution loop - max turns to prevent infinite loops
+        max_turns = 15  # Handle complex multi-file queries
         current_turn = 0
 
         while current_turn < max_turns:

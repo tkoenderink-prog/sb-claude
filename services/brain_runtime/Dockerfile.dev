@@ -1,3 +1,4 @@
+# Development Dockerfile with hot reload support
 FROM python:3.11-slim
 
 # Create non-root user matching host UID/GID (fixes file permissions)
@@ -19,33 +20,24 @@ RUN apt-get update && apt-get install -y \
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Copy dependency files from brain_runtime
+# Copy dependency files
 COPY --chown=app:app brain_runtime/pyproject.toml brain_runtime/uv.lock ./
 
 # Install Python dependencies
 RUN uv sync --frozen
 
-# Copy brain_runtime application code
-COPY --chown=app:app brain_runtime/ ./
-
-# Copy sibling modules (at /services level, but Docker flattens to /)
-# Code does sys.path.insert(0, Path(__file__).parent.parent.parent) which in Docker = /
+# Copy sibling modules
 COPY --chown=app:app processors/ ../processors/
 COPY --chown=app:app skills/ ../skills/
 
-# Create data directories and fix .venv ownership
+# Create data directories and fix ownership
 RUN mkdir -p /app/data/logs /app/data/secrets && \
     chown -R app:app /app/data /app/.venv
 
-# Expose port
 EXPOSE 8000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
-  CMD curl -f http://localhost:8000/health || exit 1
 
 # Switch to non-root user
 USER app
 
-# Run application
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Development command with hot reload
+CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
